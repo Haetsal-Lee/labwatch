@@ -25,6 +25,15 @@ from labwatch.utils.version_checks import (check_dependencies, check_sources,
 # SON Manipulators for saving and retrieving search spaces
 SON_MANIPULATORS = []
 
+def nested_dict_update(d, u):
+    import collections
+    for k, v in u.items():
+        if isinstance(v, collections.Mapping):
+            d[k] = nested_dict_update(d.get(k, {}), v)
+        else:
+            d[k] = v
+    return d
+
 
 class FakeRun(object):
     def __init__(self):
@@ -193,7 +202,7 @@ class LabAssistant(object):
         final_config = dict(preset or {})
         # the fallback parameter is needed to fit the interface of a
         # ConfigScope, but here it is not supported.
-        assert not fallback, "{}".format(fallback)
+        # assert not fallback, "{}".format(fallback)
         # ensure we have a search space definition
         if self.current_search_space is None:
             raise ValueError("LabAssistant search_space_wrapper called but "
@@ -205,8 +214,10 @@ class LabAssistant(object):
         # Create configuration object
         config = fill_in_values(self.current_search_space.search_space, values,
                                 fill_by='uid')
-        final_config.update(config)
-        final_config.update(fixed)
+        # final_config.update(config)
+        # final_config.update(fixed)
+        nested_dict_update(final_config, config)
+        nested_dict_update(final_config, fixed)
 
         return final_config
 
